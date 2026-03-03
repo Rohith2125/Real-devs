@@ -7,25 +7,37 @@ router = APIRouter()
 
 @router.post("/enroll")
 def enroll_user(enrollment: EnrollmentCreate):
-
     # 1️⃣ Check if already enrolled
+    # Ensure they are strings for the lookup
+    uid = str(enrollment.user_id)
+    cid = str(enrollment.challenge_id)
+    print(f"DEBUG: Enrollment request - User: {uid}, Challenge: {cid}")
+    
     existing = supabase.table("enrollments") \
         .select("*") \
-        .eq("user_id", enrollment.user_id) \
-        .eq("challenge_id", enrollment.challenge_id) \
+        .eq("user_id", uid) \
+        .eq("challenge_id", cid) \
         .execute()
 
     if existing.data:
         raise HTTPException(status_code=400, detail="User already enrolled")
 
     # 2️⃣ Insert enrollment
+    enroll_data = {
+        "user_id": uid,
+        "challenge_id": cid
+    }
+    
     response = supabase.table("enrollments") \
-        .insert(enrollment.dict()) \
+        .insert(enroll_data) \
         .execute()
+
+    if not response.data:
+        raise HTTPException(status_code=500, detail="Failed to enroll in challenge")
 
     return {
         "message": "Enrolled successfully",
-        "data": response.data
+        "data": response.data[0]
     }
 
 

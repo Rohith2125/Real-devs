@@ -6,6 +6,8 @@ import SubmissionForm from "./pages/ChallengeDetail";
 import MyChallenges from "./pages/MyChallenges"
 import SponsorOnboarding from './pages/SponsorOnboarding'
 import SponsorDashboard from "./pages/SponsorDarsboard";
+import SponsorChallenges from "./pages/SponsorChallenges";
+import ChallengeLeaderboard from "./pages/ChallengeLeaderboard";
 
 
 function App() {
@@ -19,6 +21,8 @@ function App() {
         <Route path="/my-challenges" element={<MyChallenges />} />
         <Route path="/sponsor-dashboard" element={<SponsorDashboard />} />
         <Route path="/sponsor-onboarding" element={<SponsorOnboarding />} />
+        <Route path="/sponsor-challenges" element={<SponsorChallenges />} />
+        <Route path="/challenge/:id/leaderboard" element={<ChallengeLeaderboard />} />
       </Routes>
     </BrowserRouter>
   );
