@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 from typing import Optional
 from uuid import UUID
 from datetime import datetime
@@ -39,6 +39,6 @@ class EnrollmentCreate(BaseModel):
 class SubmissionCreate(BaseModel):
     user_id: UUID
     challenge_id: UUID
-    repo_url: str
-    pitch_deck_url: str
-    demo_video_url: str
+    repo_url: str = Field(..., min_length=1)
+    pitch_deck_url: Optional[str] = None
+    demo_video_url: Optional[str] = None

@@ -15,7 +15,3 @@ dist/
 backend/probe_server.py
 backend/test_challenge_model.py
 backend/check_deadlines.py
-
-git rm --cached backend/probe_server.py
-git rm --cached backend/test_challenge_model.py
-git rm --cached backend/check_deadlines.py

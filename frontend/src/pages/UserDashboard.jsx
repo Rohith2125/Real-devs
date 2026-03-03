@@ -1,13 +1,16 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../services/supabase";
 import { useNavigate } from "react-router-dom";
-import { getChallenges, enrollInChallenge, syncUser } from "../services/api";
+import { getChallenges, enrollInChallenge, syncUser, getEnrolledChallenges } from "../services/api";
+import SubmissionModal from "../components/SubmissionModal";
 
 const UserDashboard = () => {
   const navigate = useNavigate();
   const [userId, setUserId] = useState(null);
   const [challenges, setChallenges] = useState([]);
+  const [enrolledIds, setEnrolledIds] = useState(new Set());
   const [loading, setLoading] = useState(true);
+  const [selectedChallenge, setSelectedChallenge] = useState(null);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -29,21 +32,45 @@ const UserDashboard = () => {
     const user = data.user;
 
     // 🔥 Sync user into backend (role="user" for Builders)
-    await syncUser(user);
+    try {
+      await syncUser(user);
+    } catch (err) {
+      console.error("User sync failed:", err);
+    }
 
     setUserId(user.id);
-    fetchChallenges();
+    await Promise.all([
+      fetchChallenges(),
+      fetchEnrolled(user.id)
+    ]);
     setLoading(false);
   };
 
   const fetchChallenges = async () => {
-    const data = await getChallenges();
-    setChallenges(data);
+    try {
+      const data = await getChallenges();
+      setChallenges(data);
+    } catch (err) {
+      console.error("Failed to fetch challenges:", err);
+    }
+  };
+
+  const fetchEnrolled = async (uid) => {
+    try {
+      const enrolledData = await getEnrolledChallenges(uid);
+      const ids = new Set((enrolledData.enrolled_challenges || []).map(c => c.id));
+      setEnrolledIds(ids);
+    } catch (err) {
+      console.error("Failed to fetch enrollments:", err);
+    }
   };
 
   const handleEnroll = async (challengeId) => {
+    if (enrolledIds.has(challengeId)) return;
+
     try {
       await enrollInChallenge(userId, challengeId);
+      setEnrolledIds(prev => new Set([...prev, challengeId]));
       alert("Enrolled successfully!");
     } catch (err) {
       console.error(err);
@@ -82,61 +109,96 @@ const UserDashboard = () => {
 
       <div className="max-w-7xl mx-auto">
         <div className="mb-12">
-          <h2 className="text-5xl font-bold mb-4">Available Challenges</h2>
+          <h2 className="text-5xl font-bold mb-4 italic">Available<br /><span className="text-gray-500 not-italic">Challenges</span></h2>
           <p className="text-gray-500 font-medium max-w-lg">
             Build MVPs, get scored by AI, and land roles at the world's most innovative companies.
-            Click a challenge to see details and start building.
+            Select a challenge to begin your journey.
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {challenges.length > 0 ? challenges.map((challenge) => (
-            <div
-              key={challenge.id}
-              className="group bg-[#0A0A0A] border border-white/5 p-8 rounded-3xl hover:border-white/20 transition-all duration-300 flex flex-col justify-between hover:scale-[1.02] cursor-pointer"
-              onClick={() => navigate(`/challenge/${challenge.id}`)}
-            >
-              <div>
-                <div className="flex justify-between items-start mb-6">
-                  <div className="px-3 py-1 bg-white/5 border border-white/10 rounded-full text-[10px] font-black uppercase tracking-widest text-gray-400">
-                    LIVE CHALLENGE
+          {challenges.length > 0 ? challenges.map((challenge) => {
+            const isEnrolled = enrolledIds.has(challenge.id);
+            const isAfterDeadline = new Date() > new Date(challenge.deadline);
+
+            return (
+              <div
+                key={challenge.id}
+                className="group bg-[#0A0A0A] border border-white/5 p-8 rounded-3xl hover:border-white/20 transition-all duration-300 flex flex-col justify-between hover:scale-[1.02] cursor-pointer"
+                onClick={() => navigate(`/challenge/${challenge.id}`)}
+              >
+                <div>
+                  <div className="flex justify-between items-start mb-6">
+                    <div className={`px-3 py-1 border rounded-full text-[10px] font-black uppercase tracking-widest ${isAfterDeadline ? 'bg-red-500/10 border-red-500/20 text-red-500' : isEnrolled ? 'bg-blue-500/10 border-blue-500/20 text-blue-500' : 'bg-green-500/10 border-green-500/20 text-green-500'}`}>
+                      {isAfterDeadline ? 'CLOSED' : isEnrolled ? 'ENROLLED' : 'LIVE CHALLENGE'}
+                    </div>
+                    <div className="text-2xl font-bold text-white">${challenge.prize_pool}</div>
                   </div>
-                  <div className="text-2xl font-bold text-white">${challenge.prize_pool}</div>
+
+                  <h3 className="text-2xl font-bold mb-3 group-hover:underline underline-offset-4 tracking-tight">
+                    {challenge.title}
+                  </h3>
+
+                  <p className="text-gray-500 text-sm mb-8 leading-relaxed line-clamp-2 italic">
+                    "{challenge.problem_statement}"
+                  </p>
                 </div>
 
-                <h3 className="text-2xl font-bold mb-3 group-hover:underline underline-offset-4 tracking-tight">
-                  {challenge.title}
-                </h3>
+                <div className="flex flex-col gap-4">
+                  <div className="flex justify-between items-center text-[10px] text-gray-500 font-bold uppercase tracking-widest border-t border-white/5 pt-6 group-hover:border-white/20 transition-all">
+                    <span>Deadline</span>
+                    <span className="text-gray-300 font-black">{new Date(challenge.deadline).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</span>
+                  </div>
 
-                <p className="text-gray-500 text-sm mb-8 leading-relaxed line-clamp-2 italic">
-                  "{challenge.problem_statement}"
-                </p>
-              </div>
-
-              <div className="flex flex-col gap-4">
-                <div className="flex justify-between items-center text-[10px] text-gray-500 font-bold uppercase tracking-widest border-t border-white/5 pt-6 group-hover:border-white/20 transition-all">
-                  <span>Deadline</span>
-                  <span className="text-gray-300 font-black">{new Date(challenge.deadline).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</span>
+                  {isAfterDeadline ? (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/challenge/${challenge.id}/leaderboard`);
+                      }}
+                      className="w-full bg-white text-black py-4 rounded-2xl font-black text-lg hover:bg-gray-200 transition-all shadow-xl shadow-white/5"
+                    >
+                      VIEW LEADERBOARD 🏆
+                    </button>
+                  ) : isEnrolled ? (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedChallenge(challenge);
+                      }}
+                      className="w-full bg-white text-black py-4 rounded-2xl font-black text-lg hover:bg-gray-200 transition-all shadow-xl shadow-white/5"
+                    >
+                      SUBMIT MVP
+                    </button>
+                  ) : (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleEnroll(challenge.id);
+                      }}
+                      className="w-full bg-white text-black py-4 rounded-2xl font-black text-lg hover:bg-gray-200 transition-all shadow-xl shadow-white/5"
+                    >
+                      ENROLL NOW
+                    </button>
+                  )}
                 </div>
-
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleEnroll(challenge.id);
-                  }}
-                  className="w-full bg-white text-black py-4 rounded-2xl font-black text-lg hover:bg-gray-200 transition-all shadow-xl shadow-white/5"
-                >
-                  ENROLL NOW
-                </button>
               </div>
-            </div>
-          )) : (
+            );
+          }) : (
             <div className="col-span-full py-32 text-center text-gray-500 italic border-2 border-dashed border-white/5 rounded-3xl font-bold">
               No active challenges in the arena right now. Check back soon.
             </div>
           )}
         </div>
       </div>
+
+      {selectedChallenge && (
+        <SubmissionModal
+          challenge={selectedChallenge}
+          onClose={() => setSelectedChallenge(null)}
+          userId={userId}
+        />
+      )}
     </div>
   );
 };

@@ -19,8 +19,8 @@ const SubmissionModal = ({ challenge, onClose, userId }) => {
         user_id: userId,
         challenge_id: challenge.id,
         repo_url: repoUrl,
-        pitch_deck_url: pitchUrl,
-        demo_video_url: videoUrl,
+        pitch_deck_url: pitchUrl.trim() || null,
+        demo_video_url: videoUrl.trim() || null,
       });
 
       alert("CHALLENGE SUBMITTED SUCCESSFULLY 🚀");
