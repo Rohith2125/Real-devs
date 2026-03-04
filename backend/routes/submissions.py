@@ -92,6 +92,7 @@ def submit_mvp(submission: SubmissionCreate):
         score_result = None
         try:
             score_result = score_submission(challenge, submission_data)
+            print(f'check score: {score_result}')
             if score_result and "overall_score" in score_result:
                 new_score = float(score_result["overall_score"])
                 score_result["overall_score"] = new_score
@@ -101,26 +102,25 @@ def submit_mvp(submission: SubmissionCreate):
             print(f"DEBUG: Scoring failed - {e}")
             # we don't raise here, allow the submission to succeed without score for now
 
-        # 6️⃣ Save challenge score (only if we have a score)
-        if score_result:
-            score_data = {
-                "submission_id": submission_data["id"],
-                "overall_score": new_score,
-                "llm_output": score_result
-            }
+        # 6️⃣ Save challenge score (Always create a record for the leaderboard)
+        score_data = {
+            "submission_id": submission_data["id"],
+            "overall_score": new_score,
+            "llm_output": score_result if score_result else {"overall_score": 0, "rationale": "AI scoring in progress or unavailable.", "scores": {}}
+        }
+        
+        existing_score = supabase.table("challenge_scores") \
+            .select("id") \
+            .eq("submission_id", submission_data["id"]) \
+            .execute()
             
-            existing_score = supabase.table("challenge_scores") \
-                .select("id") \
+        if existing_score.data:
+            supabase.table("challenge_scores") \
+                .update(score_data) \
                 .eq("submission_id", submission_data["id"]) \
                 .execute()
-                
-            if existing_score.data:
-                supabase.table("challenge_scores") \
-                    .update(score_data) \
-                    .eq("submission_id", submission_data["id"]) \
-                    .execute()
-            else:
-                supabase.table("challenge_scores").insert(score_data).execute()
+        else:
+            supabase.table("challenge_scores").insert(score_data).execute()
 
             # 7️⃣ Update season score
             existing_season = supabase.table("season_scores") \
@@ -160,81 +160,3 @@ def submit_mvp(submission: SubmissionCreate):
     }
 
 
-
-@router.get("/challenge/{challenge_id}")
-def get_submissions_for_challenge(challenge_id: UUID):
-
-    # 1️⃣ Fetch challenge first
-    challenge_response = supabase.table("challenges") \
-        .select("*") \
-        .eq("id", str(challenge_id)) \
-        .single() \
-        .execute()
-
-    if not challenge_response.data:
-        raise HTTPException(status_code=404, detail="Challenge not found")
-
-    challenge = challenge_response.data
-
-    # 2️⃣ Deadline check
-    deadline = datetime.fromisoformat(challenge["deadline"].replace("Z", "+00:00"))
-    current_time = datetime.now(timezone.utc)
-
-    if current_time < deadline:
-        raise HTTPException(
-            status_code=403,
-            detail="Leaderboard will be available after the submission deadline."
-        )
-
-    # 3️⃣ Get submissions for this challenge
-    submissions = supabase.table("submissions") \
-        .select("*") \
-        .eq("challenge_id", str(challenge_id)) \
-        .execute()
-
-    if not submissions.data:
-        return {"submissions": []}
-
-    results = []
-
-    for submission in submissions.data:
-
-        # 4️⃣ Get user info
-        user = supabase.table("users") \
-            .select("github_handle") \
-            .eq("id", submission["user_id"]) \
-            .single() \
-            .execute()
-
-        # 5️⃣ Get score
-        score = supabase.table("challenge_scores") \
-            .select("overall_score") \
-            .eq("submission_id", submission["id"]) \
-            .execute()
-
-        overall_score = None
-        if score.data:
-            overall_score = score.data[0]["overall_score"]
-
-        results.append({
-            "submission_id": submission["id"],
-            "github_handle": user.data["github_handle"],
-            "repo_url": submission["repo_url"],
-            "pitch_deck_url": submission["pitch_deck_url"],
-            "demo_video_url": submission["demo_video_url"],
-            "overall_score": overall_score,
-            "submitted_at": submission["created_at"]
-        })
-
-    # 6️⃣ Sort by score descending
-    results = sorted(
-        results,
-        key=lambda x: x["overall_score"] if x["overall_score"] is not None else 0,
-        reverse=True
-    )
-
-    # 7️⃣ Add rank
-    for idx, entry in enumerate(results):
-        entry["rank"] = idx + 1
-
-    return {"submissions": results}

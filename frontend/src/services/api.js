@@ -85,7 +85,7 @@ export const getSponsorChallenges = async () => {
 
 // 🔹 Get leaderboard for a challenge
 export const getLeaderboard = async (challenge_id) => {
-  const res = await API.get(`/submissions/challenge/${challenge_id}`);
+  const res = await API.get(`/leaderboard/challenge/${challenge_id}`);
   return res.data;
 };
 

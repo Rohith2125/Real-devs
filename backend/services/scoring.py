@@ -34,36 +34,34 @@ def score_submission(challenge, submission):
     confidence (number between 0 and 1).
     """
 
-    response = client.chat.completions.create(
-        model="llama3-70b-8192",
-        messages=[
-            {
-                "role": "system",
-                "content": """
-                You are an AI competition evaluator.
-
-                You carefully assess submissions based on the provided challenge.
-
-                You MUST return ONLY valid JSON.
-                Do not include markdown.
-                Do not include explanations outside JSON.
-                Do not wrap in code blocks.
-                """
-            },
-            {
-                "role": "user",
-                "content": prompt
-            }
-        ],
-        temperature=0.5,
-        response_format={"type": "json_object"}  # forces JSON output
-    )
-
-    content = response.choices[0].message.content
-
     try:
+        response = client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=[
+                {
+                    "role": "system",
+                    "content": """
+                    You are an AI competition evaluator.
+
+                    You carefully assess submissions based on the provided challenge.
+
+                    You MUST return ONLY valid JSON.
+                    Do not include markdown.
+                    Do not include explanations outside JSON.
+                    Do not wrap in code blocks.
+                    """
+                },
+                {
+                    "role": "user",
+                    "content": prompt
+                }
+            ],
+            temperature=0.5,
+            response_format={"type": "json_object"}
+        )
+
+        content = response.choices[0].message.content
         return json.loads(content)
     except Exception as e:
-        print("JSON Parsing Failed:", e)
-        print("Raw Output:", content)
+        print(f"Scoring Engine Error: {e}")
         return None

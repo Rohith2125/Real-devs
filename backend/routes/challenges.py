@@ -56,7 +56,7 @@ def create_challenge(
         "title": challenge.title,
         "problem_statement": challenge.problem_statement,
         "prize_pool": challenge.prize_pool,
-        "deadline": challenge.deadline.strftime("%Y-%m-%dT%H:%M:%S"),
+        "deadline": challenge.deadline.isoformat(),
         "is_live": True
     }
     
