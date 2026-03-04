@@ -139,8 +139,30 @@ def challenge_leaderboard(challenge_id: str):
         reverse=True
     )
 
-    # 7️⃣ Add rank
+    # 7️⃣ Add rank and Assign/Persist Badges
     for idx, entry in enumerate(results):
-        entry["rank"] = idx + 1
+        rank = idx + 1
+        entry["rank"] = rank
+        
+        # 🏅 Badge logic
+        if rank == 1:
+            badge = "GOAT Dev"
+        elif rank == 2:
+            badge = "Hacker Dev"
+        elif rank == 3:
+            badge = "Shipper Dev"
+        else:
+            badge = "Active Dev"
+            
+        entry["badge"] = badge
+        
+        # 💾 Persist badge to DB (if changed or missing)
+        try:
+            supabase.table("challenge_scores") \
+                .update({"badge": badge}) \
+                .eq("submission_id", entry["submission_id"]) \
+                .execute()
+        except Exception as e:
+            print(f"DEBUG: Failed to persist badge for {entry['submission_id']}: {e}")
 
     return {"submissions": results}

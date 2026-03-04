@@ -8,8 +8,14 @@ const ChallengeLeaderboard = () => {
     const [leaderboard, setLeaderboard] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-
     const [expandedId, setExpandedId] = useState(null);
+
+    const getBadgeStyle = (rank) => {
+        if (rank === 1) return "text-yellow-500 border-yellow-500/20 bg-yellow-500/10";
+        if (rank === 2) return "text-gray-300 border-gray-300/20 bg-gray-300/10";
+        if (rank === 3) return "text-orange-500 border-orange-500/20 bg-orange-500/10";
+        return "text-blue-400 border-blue-400/20 bg-blue-400/10";
+    };
 
     useEffect(() => {
         fetchLeaderboard();
@@ -73,6 +79,7 @@ const ChallengeLeaderboard = () => {
                                 <tr className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">
                                     <th className="px-10 py-6">Rank</th>
                                     <th className="px-10 py-6">Builder</th>
+                                    <th className="px-10 py-6">Badge</th>
                                     <th className="px-10 py-6">Email</th>
                                     <th className="px-10 py-6">Score</th>
                                     <th className="px-10 py-6">Execution</th>
@@ -92,6 +99,11 @@ const ChallengeLeaderboard = () => {
                                             <td className="px-10 py-8">
                                                 <div className="text-xl font-bold tracking-tight">{entry.github_handle}</div>
                                                 <div className="text-xs text-gray-500 font-medium uppercase tracking-widest mt-1">AI BUILDER</div>
+                                            </td>
+                                            <td className="px-10 py-8">
+                                                <div className={`px-4 py-1.5 border rounded-full text-[10px] font-black uppercase tracking-widest inline-block ${getBadgeStyle(idx + 1)}`}>
+                                                    {entry.badge || 'Active Dev'}
+                                                </div>
                                             </td>
                                             <td className="px-10 py-8">
                                                 <div className="text-sm font-medium text-gray-300 truncate max-w-[200px]">{entry.email}</div>
@@ -135,7 +147,7 @@ const ChallengeLeaderboard = () => {
                                         </tr>
                                         {expandedId === entry.submission_id && (
                                             <tr className="bg-white/[0.03] animate-in slide-in-from-top-4 duration-300">
-                                                <td colSpan="6" className="px-10 py-12 border-b border-white/5">
+                                                <td colSpan="7" className="px-10 py-12 border-b border-white/5">
                                                     {entry.evaluation ? (
                                                         <div className="grid grid-cols-1 lg:grid-cols-5 gap-12">
                                                             <div className="lg:col-span-3">
@@ -174,7 +186,7 @@ const ChallengeLeaderboard = () => {
                                     </React.Fragment>
                                 )) : (
                                     <tr>
-                                        <td colSpan="6" className="py-32 text-center text-gray-500 italic font-bold text-lg">
+                                        <td colSpan="7" className="py-32 text-center text-gray-500 italic font-bold text-lg">
                                             No arena entries recorded for this mission yet.
                                         </td>
                                     </tr>
