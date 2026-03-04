@@ -103,7 +103,7 @@ def challenge_leaderboard(challenge_id: str):
     for submission in submissions.data:
         # 4️⃣ Get user info
         user = supabase.table("users") \
-            .select("github_handle") \
+            .select("github_handle, email") \
             .eq("id", submission["user_id"]) \
             .single() \
             .execute()
@@ -123,6 +123,7 @@ def challenge_leaderboard(challenge_id: str):
         results.append({
             "submission_id": submission["id"],
             "github_handle": user.data["github_handle"] if user.data else "Anonymous",
+            "email": user.data["email"] if user.data else "N/A",
             "repo_url": submission["repo_url"],
             "pitch_deck_url": submission.get("pitch_deck_url"),
             "demo_video_url": submission.get("demo_video_url"),
