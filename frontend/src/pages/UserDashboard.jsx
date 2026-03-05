@@ -64,11 +64,17 @@ const UserDashboard = () => {
       console.error("User sync failed:", err);
     }
 
-    await Promise.all([
-      fetchChallenges(),
-      fetchEnrolled(user.id)
-    ]);
-    setLoading(false);
+    try {
+      await Promise.all([
+        fetchChallenges(),
+        fetchEnrolled(user.id)
+      ]);
+    } catch (err) {
+      console.error("Data fetch failed:", err);
+      // We still want to stop loading even if some data fails
+    } finally {
+      setLoading(false);
+    }
   };
 
   const fetchChallenges = async () => {

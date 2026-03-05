@@ -68,11 +68,13 @@ const SponsorDashboard = () => {
         navigate("/sponsor-onboarding");
         return;
       }
-
-      setLoading(false);
     } catch (err) {
       console.error("Critical error during user sync:", err);
+      // Fallback to onboarding if we can't sync or it's a new user
       navigate("/sponsor-onboarding");
+      return;
+    } finally {
+      setLoading(false);
     }
   };
 
