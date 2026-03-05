@@ -20,6 +20,7 @@ const SponsorDashboard = () => {
   const [problemStatement, setProblemStatement] = useState("");
   const [prizePool, setPrizePool] = useState("");
   const [deadline, setDeadline] = useState(getLocalDefaultDeadline());
+  const [isLaunching, setIsLaunching] = useState(false);
 
   useEffect(() => {
     checkUser();
@@ -61,6 +62,7 @@ const SponsorDashboard = () => {
       return;
     }
 
+    setIsLaunching(true);
     try {
       await createChallenge({
         title,
@@ -77,6 +79,8 @@ const SponsorDashboard = () => {
     } catch (error) {
       console.error(error);
       alert("Error creating challenge. Ensure your profile is fully set up.");
+    } finally {
+      setIsLaunching(false);
     }
   };
 
@@ -152,12 +156,14 @@ const SponsorDashboard = () => {
               </div>
               <div>
                 <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">Deadline</label>
+
                 <input
                   type="datetime-local"
-                  className="w-full bg-black border border-white/10 p-4 rounded-xl outline-none focus:border-white/30"
+                  className="w-full bg-black border border-white/10 p-4 rounded-xl outline-none focus:border-white/30 [color-scheme:dark]"
                   value={deadline}
                   onChange={(e) => setDeadline(e.target.value)}
                 />
+
                 <p className="text-[10px] text-gray-600 mt-2 ml-1 font-bold uppercase tracking-widest">
                   Set to your local time (saved as UTC)
                 </p>
@@ -166,9 +172,17 @@ const SponsorDashboard = () => {
 
             <button
               onClick={handleCreate}
-              className="w-full bg-white text-black py-4 rounded-xl font-bold mt-4 hover:bg-gray-200 transition-all font-black text-lg shadow-xl shadow-white/5"
+              disabled={isLaunching}
+              className={`w-full py-4 rounded-xl font-bold mt-4 transition-all font-black text-lg shadow-xl flex items-center justify-center gap-3 ${isLaunching ? 'bg-gray-800 text-gray-500 cursor-not-allowed border border-white/5' : 'bg-white text-black hover:bg-gray-200 active:scale-[0.98] shadow-white/5'}`}
             >
-              LAUNCH CHALLENGE
+              {isLaunching ? (
+                <>
+                  <div className="w-5 h-5 border-2 border-gray-500 border-t-white rounded-full animate-spin"></div>
+                  <span>LAUNCHING ARENA MISSION...</span>
+                </>
+              ) : (
+                "LAUNCH CHALLENGE"
+              )}
             </button>
           </div>
         </div>

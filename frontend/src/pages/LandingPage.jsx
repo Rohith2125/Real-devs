@@ -11,7 +11,7 @@ const LandingPage = () => {
           <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
             <div className="w-4 h-4 bg-black rounded-sm rotate-45"></div>
           </div>
-          <h1 className="text-xl font-bold tracking-tighter">ARENA</h1>
+          <h1 className="text-xl font-bold tracking-tighter">Real Dev</h1>
         </div>
 
         <div className="hidden md:flex gap-10 text-sm font-medium text-gray-400">

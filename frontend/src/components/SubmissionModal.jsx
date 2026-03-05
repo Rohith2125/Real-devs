@@ -93,9 +93,16 @@ const SubmissionModal = ({ challenge, onClose, userId }) => {
           <button
             disabled={isSubmitting}
             onClick={handleSubmit}
-            className="w-full bg-white text-black py-5 rounded-2xl font-black text-lg hover:bg-gray-200 active:scale-95 transition-all shadow-xl shadow-white/5"
+            className={`w-full py-5 rounded-2xl font-black text-lg transition-all shadow-xl flex items-center justify-center gap-3 ${isSubmitting ? 'bg-gray-800 text-gray-500 cursor-not-allowed border border-white/5' : 'bg-white text-black hover:bg-gray-200 active:scale-[0.98] shadow-white/5'}`}
           >
-            {isSubmitting ? "PROCESSING ARENA ENTRY..." : "UPLOAD BUILD 🚀"}
+            {isSubmitting ? (
+              <>
+                <div className="w-5 h-5 border-2 border-gray-500 border-t-white rounded-full animate-spin"></div>
+                <span>PROCESSING ARENA ENTRY...</span>
+              </>
+            ) : (
+              "UPLOAD BUILD 🚀"
+            )}
           </button>
           <button
             onClick={onClose}
