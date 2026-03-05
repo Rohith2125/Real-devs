@@ -96,7 +96,13 @@ const UserDashboard = () => {
             onClick={() => navigate("/my-challenges")}
             className="text-sm font-bold opacity-70 hover:opacity-100 transition-all uppercase tracking-widest"
           >
-            MY CHALLENGES
+            MY MISSIONS
+          </button>
+          <button
+            onClick={() => navigate("/global-leaderboard")}
+            className="text-sm font-bold opacity-70 hover:opacity-100 transition-all uppercase tracking-widest"
+          >
+            GLOBAL ARENA
           </button>
           <button
             onClick={handleLogout}
@@ -135,9 +141,13 @@ const UserDashboard = () => {
                     <div className="text-2xl font-bold text-white">${challenge.prize_pool}</div>
                   </div>
 
-                  <h3 className="text-2xl font-bold mb-3 group-hover:underline underline-offset-4 tracking-tight">
+                  <h3 className="text-2xl font-bold mb-1 group-hover:underline underline-offset-4 tracking-tight">
                     {challenge.title}
                   </h3>
+
+                  <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4">
+                    Sponsored by {challenge.sponsor_name || 'Anonymous'}
+                  </div>
 
                   <p className="text-gray-500 text-sm mb-8 leading-relaxed line-clamp-2 italic">
                     "{challenge.problem_statement}"

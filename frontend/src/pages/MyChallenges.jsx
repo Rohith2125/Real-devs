@@ -60,7 +60,13 @@ const MyChallenges = () => {
             onClick={() => navigate("/dashboard")}
             className="text-sm font-bold opacity-70 hover:opacity-100 transition-all uppercase tracking-widest"
           >
-            BROWSE ARENA
+            THE ARENA
+          </button>
+          <button
+            onClick={() => navigate("/global-leaderboard")}
+            className="text-sm font-bold opacity-70 hover:opacity-100 transition-all uppercase tracking-widest"
+          >
+            GLOBAL ARENA
           </button>
           <button
             onClick={async () => {

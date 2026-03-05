@@ -74,8 +74,20 @@ def create_challenge(
 
 @router.get("/")
 def get_all_challenges():
-    response = supabase.table("challenges").select("*").execute()
-    return response.data
+    # Use a join to fetch the sponsor's company_name from the 'users' table
+    response = supabase.table("challenges") \
+        .select("*, sponsor:users!id(company_name)") \
+        .execute()
+    
+    # Flatten the result for easier frontend consumption
+    challenges = []
+    for entry in response.data:
+        challenge = entry.copy()
+        sponsor = challenge.pop("sponsor", {})
+        challenge["sponsor_name"] = sponsor.get("company_name", "Anonymous Sponsor")
+        challenges.append(challenge)
+        
+    return challenges
 
 @router.get("/my-challenges")
 def get_sponsor_challenges(authorization: str = Header(None)):
@@ -92,7 +104,7 @@ def get_sponsor_challenges(authorization: str = Header(None)):
         raise HTTPException(status_code=401, detail="Could not verify sponsor identity")
 
     response = supabase.table("challenges") \
-        .select("*") \
+        .select("*, sponsor:users!id(company_name)") \
         .eq("sponsor_id", str(sponsor_id)) \
         .execute()
     

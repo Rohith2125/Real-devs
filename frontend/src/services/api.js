@@ -3,7 +3,7 @@ import axios from "axios";
 import { supabase } from "./supabase";
 
 const API = axios.create({
-  baseURL: "http://127.0.0.1:8000",
+  baseURL: "http://127.0.0.1:8000"
 });
 
 // 🔹 Get all challenges
@@ -86,6 +86,12 @@ export const getSponsorChallenges = async () => {
 // 🔹 Get leaderboard for a challenge
 export const getLeaderboard = async (challenge_id) => {
   const res = await API.get(`/leaderboard/challenge/${challenge_id}`);
+  return res.data;
+};
+
+// 🔹 Get global leaderboard
+export const getGlobalLeaderboard = async () => {
+  const res = await API.get("/leaderboard/global");
   return res.data;
 };
 

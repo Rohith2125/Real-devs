@@ -7,6 +7,74 @@ from datetime import datetime, timezone
 router = APIRouter()
 
 
+@router.get("/global")
+def global_leaderboard():
+    # 1️⃣ Get all users (Builders only)
+    users_res = supabase.table("users") \
+        .select("*") \
+        .eq("role", "user") \
+        .execute()
+
+    if not users_res.data:
+        return {"leaderboard": []}
+
+    leaderboard = []
+
+    for user in users_res.data:
+        # 2️⃣ Get all submissions for this user
+        submissions_res = supabase.table("submissions") \
+            .select("id") \
+            .eq("user_id", user["id"]) \
+            .execute()
+        
+        submission_count = len(submissions_res.data)
+        
+        # 3️⃣ Get all scores and badges for this user's submissions
+        submission_ids = [s["id"] for s in submissions_res.data]
+        
+        total_score = 0
+        badges = {
+            "GOAT Dev": 0,
+            "Hacker Dev": 0,
+            "Shipper Dev": 0,
+            "Active Dev": 0
+        }
+
+        if submission_ids:
+            scores_res = supabase.table("challenge_scores") \
+                .select("overall_score, badge") \
+                .in_("submission_id", submission_ids) \
+                .execute()
+            
+            for score_entry in scores_res.data:
+                total_score += float(score_entry.get("overall_score") or 0)
+                badge = score_entry.get("badge")
+                if badge in badges:
+                    badges[badge] += 1
+
+        leaderboard.append({
+            "user_id": user["id"],
+            "name": user["github_handle"] or user["email"].split('@')[0],
+            "email": user["email"],
+            "github_profile": f"https://github.com/{user['github_handle']}" if user["github_handle"] else None,
+            "completed_challenges": submission_count,
+            "total_score": round(total_score, 2),
+            "badges": badges
+        })
+
+    # 4️⃣ Sort by total_score descending
+    leaderboard = sorted(
+        leaderboard,
+        key=lambda x: x["total_score"],
+        reverse=True
+    )
+
+    # 5️⃣ Add rank
+    for idx, entry in enumerate(leaderboard):
+        entry["rank"] = idx + 1
+
+    return {"leaderboard": leaderboard}
+
 
 @router.get("/season")
 def season_leaderboard():

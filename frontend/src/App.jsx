@@ -8,6 +8,7 @@ import SponsorOnboarding from './pages/SponsorOnboarding'
 import SponsorDashboard from "./pages/SponsorDarsboard";
 import SponsorChallenges from "./pages/SponsorChallenges";
 import ChallengeLeaderboard from "./pages/ChallengeLeaderboard";
+import GlobalLeaderboard from "./pages/GlobalLeaderboard";
 
 
 function App() {
@@ -19,6 +20,7 @@ function App() {
         <Route path="/dashboard" element={<UserDashboard />} />
         <Route path="/challenge/:id" element={<ChallengeDetail />} />
         <Route path="/my-challenges" element={<MyChallenges />} />
+        <Route path="/global-leaderboard" element={<GlobalLeaderboard />} />
         <Route path="/sponsor-dashboard" element={<SponsorDashboard />} />
         <Route path="/sponsor-onboarding" element={<SponsorOnboarding />} />
         <Route path="/sponsor-challenges" element={<SponsorChallenges />} />
