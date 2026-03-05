@@ -23,30 +23,55 @@ const SponsorDashboard = () => {
   const [isLaunching, setIsLaunching] = useState(false);
 
   useEffect(() => {
-    checkUser();
-  }, []);
+    // 1️⃣ Listen for auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session) {
+        setUser(session.user);
+        checkUser(session.user);
+      } else if (event === 'SIGNED_OUT') {
+        navigate("/select-role");
+      }
+    });
 
-  const checkUser = async () => {
-    const { data } = await supabase.auth.getUser();
-    if (!data.user) {
-      navigate("/select-role");
-      return;
+    // 2️⃣ Initial check
+    checkCurrentSession();
+
+    return () => subscription.unsubscribe();
+  }, [navigate]);
+
+  const checkCurrentSession = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+      setUser(session.user);
+      checkUser(session.user);
+    } else {
+      // Small delay to allow Supabase to process URL hash if present
+      setTimeout(async () => {
+        const { data: { session: retrySession } } = await supabase.auth.getSession();
+        if (retrySession) {
+          setUser(retrySession.user);
+          checkUser(retrySession.user);
+        } else {
+          if (!window.location.hash.includes('access_token')) {
+            navigate("/select-role");
+          }
+        }
+      }, 500);
     }
+  };
 
+  const checkUser = async (authUser) => {
     try {
-      // Standardized sync using the api service
-      const dbUser = await syncUser(data.user, "sponsor");
+      const dbUser = await syncUser(authUser, "sponsor");
 
       if (!dbUser.company_name) {
         navigate("/sponsor-onboarding");
         return;
       }
 
-      setUser(data.user);
       setLoading(false);
     } catch (err) {
       console.error("Critical error during user sync:", err);
-      // Fallback to onboarding if we can't sync or it's a new user
       navigate("/sponsor-onboarding");
     }
   };

@@ -18,27 +18,52 @@ const UserDashboard = () => {
   };
 
   useEffect(() => {
-    init();
+    // 1️⃣ Listen for auth state changes (crucial for OAuth redirects)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session) {
+        setUserId(session.user.id);
+        init(session.user);
+      } else if (event === 'SIGNED_OUT') {
+        navigate("/select-role");
+      }
+    });
+
+    // 2️⃣ Initial check
+    checkCurrentSession();
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  const init = async () => {
-    const { data } = await supabase.auth.getUser();
-
-    if (!data.user) {
-      navigate("/select-role");
-      return;
+  const checkCurrentSession = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+      setUserId(session.user.id);
+      init(session.user);
+    } else {
+      // Small delay to allow Supabase to process URL hash if present
+      setTimeout(async () => {
+        const { data: { session: retrySession } } = await supabase.auth.getSession();
+        if (retrySession) {
+          setUserId(retrySession.user.id);
+          init(retrySession.user);
+        } else {
+          // Only redirect if absolutely no session found after retry
+          if (!window.location.hash.includes('access_token')) {
+            navigate("/select-role");
+          }
+        }
+      }, 500);
     }
+  };
 
-    const user = data.user;
-
-    // 🔥 Sync user into backend (role="user" for Builders)
+  const init = async (user) => {
+    // 🔥 Sync user into backend
     try {
       await syncUser(user);
     } catch (err) {
       console.error("User sync failed:", err);
     }
 
-    setUserId(user.id);
     await Promise.all([
       fetchChallenges(),
       fetchEnrolled(user.id)

@@ -10,15 +10,44 @@ const SponsorOnboarding = () => {
   const [isSyncing, setIsSyncing] = useState(false);
 
   useEffect(() => {
-    const checkAuth = async () => {
-      const { data } = await supabase.auth.getUser();
-      if (!data.user) {
+    // 1️⃣ Listen for auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session) {
+        checkAuth(session.user);
+      } else if (event === 'SIGNED_OUT') {
         navigate("/select-role");
-        return;
       }
+    });
 
+    // 2️⃣ Initial check
+    checkCurrentSession();
+
+    return () => subscription.unsubscribe();
+  }, [navigate]);
+
+  const checkCurrentSession = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+      checkAuth(session.user);
+    } else {
+      // Delay for hash processing
+      setTimeout(async () => {
+        const { data: { session: retrySession } } = await supabase.auth.getSession();
+        if (retrySession) {
+          checkAuth(retrySession.user);
+        } else {
+          if (!window.location.hash.includes('access_token')) {
+            navigate("/select-role");
+          }
+        }
+      }, 500);
+    }
+  };
+
+  const checkAuth = async (user) => {
+    try {
       // Check if they already exist in our DB
-      const dbUser = await syncUser(data.user, "sponsor");
+      const dbUser = await syncUser(user, "sponsor");
 
       // If we already have a company name, go straight to dashboard
       if (dbUser.company_name) {
@@ -26,10 +55,11 @@ const SponsorOnboarding = () => {
       } else {
         setLoading(false);
       }
-    };
-
-    checkAuth();
-  }, [navigate]);
+    } catch (err) {
+      console.error("Auth check failed:", err);
+      setLoading(false); // Let them try to fill the form if sync fails briefly
+    }
+  };
 
   const handleFinishOnboarding = async () => {
     if (!companyName.trim()) {
