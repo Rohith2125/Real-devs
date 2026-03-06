@@ -96,8 +96,8 @@ const MyChallenges = () => {
             >
               <div>
                 <div className="flex justify-between items-start mb-6">
-                  <div className={`px-3 py-1 border rounded-full text-[10px] font-black uppercase tracking-widest ${isAfterDeadline(challenge.deadline) ? 'bg-red-500/10 border-red-500/20 text-red-500' : 'bg-blue-500/10 border-blue-500/20 text-blue-500'}`}>
-                    {isAfterDeadline(challenge.deadline) ? 'CLOSED' : 'ENROLLED'}
+                  <div className={`px-3 py-1 border rounded-full text-[10px] font-black uppercase tracking-widest ${isAfterDeadline(challenge.deadline) ? 'bg-red-500/10 border-red-500/20 text-red-500' : challenge.has_submitted ? 'bg-purple-500/10 border-purple-500/20 text-purple-500' : 'bg-blue-500/10 border-blue-500/20 text-blue-500'}`}>
+                    {isAfterDeadline(challenge.deadline) ? 'CLOSED' : challenge.has_submitted ? 'MVP SUBMITTED' : 'ENROLLED'}
                   </div>
                   <div className="text-2xl font-bold text-white">${challenge.prize_pool}</div>
                 </div>
@@ -117,13 +117,20 @@ const MyChallenges = () => {
                   <span className="text-gray-300 font-black">{new Date(challenge.deadline).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</span>
                 </div>
 
-                <button
-                  onClick={() => setSelectedChallenge(challenge)}
-                  disabled={isAfterDeadline(challenge.deadline)}
-                  className={`w-full py-4 rounded-2xl font-black text-lg transition-all shadow-xl ${isAfterDeadline(challenge.deadline) ? 'bg-white/5 text-gray-600 cursor-not-allowed border border-white/5' : 'bg-white text-black hover:bg-gray-200 active:scale-95 shadow-white/5'}`}
-                >
-                  {isAfterDeadline(challenge.deadline) ? 'SUBMISSION CLOSED' : 'SUBMIT MVP'}
-                </button>
+                {challenge.has_submitted && !isAfterDeadline(challenge.deadline) ? (
+                  <div className="text-center py-4 bg-white/5 rounded-2xl border border-white/10">
+                    <p className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-1">MVP SUBMITTED</p>
+                    <p className="text-[10px] text-gray-500 italic">Result will be announced after deadline</p>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setSelectedChallenge(challenge)}
+                    disabled={isAfterDeadline(challenge.deadline)}
+                    className={`w-full py-4 rounded-2xl font-black text-lg transition-all shadow-xl ${isAfterDeadline(challenge.deadline) ? 'bg-white/5 text-gray-600 cursor-not-allowed border border-white/5' : 'bg-white text-black hover:bg-gray-200 active:scale-95 shadow-white/5'}`}
+                  >
+                    {isAfterDeadline(challenge.deadline) ? 'SUBMISSION CLOSED' : 'SUBMIT MVP'}
+                  </button>
+                )}
 
                 {isAfterDeadline(challenge.deadline) && (
                   <button
@@ -153,7 +160,10 @@ const MyChallenges = () => {
       {selectedChallenge && (
         <SubmissionModal
           challenge={selectedChallenge}
-          onClose={() => setSelectedChallenge(null)}
+          onClose={() => {
+            setSelectedChallenge(null);
+            fetchEnrolled(userId);
+          }}
           userId={userId}
         />
       )}

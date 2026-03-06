@@ -9,6 +9,7 @@ const UserDashboard = () => {
   const [userId, setUserId] = useState(null);
   const [challenges, setChallenges] = useState([]);
   const [enrolledIds, setEnrolledIds] = useState(new Set());
+  const [submittedIds, setSubmittedIds] = useState(new Set());
   const [loading, setLoading] = useState(true);
   const [selectedChallenge, setSelectedChallenge] = useState(null);
 
@@ -89,8 +90,13 @@ const UserDashboard = () => {
   const fetchEnrolled = async (uid) => {
     try {
       const enrolledData = await getEnrolledChallenges(uid);
-      const ids = new Set((enrolledData.enrolled_challenges || []).map(c => c.id));
+      const enrolled = enrolledData.enrolled_challenges || [];
+
+      const ids = new Set(enrolled.map(c => c.id));
       setEnrolledIds(ids);
+
+      const submitted = new Set(enrolled.filter(c => c.has_submitted).map(c => c.id));
+      setSubmittedIds(submitted);
     } catch (err) {
       console.error("Failed to fetch enrollments:", err);
     }
@@ -156,6 +162,7 @@ const UserDashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {challenges.length > 0 ? challenges.map((challenge) => {
             const isEnrolled = enrolledIds.has(challenge.id);
+            const isSubmitted = submittedIds.has(challenge.id);
             const isAfterDeadline = new Date() > new Date(challenge.deadline);
 
             return (
@@ -166,8 +173,8 @@ const UserDashboard = () => {
               >
                 <div>
                   <div className="flex justify-between items-start mb-6">
-                    <div className={`px-3 py-1 border rounded-full text-[10px] font-black uppercase tracking-widest ${isAfterDeadline ? 'bg-red-500/10 border-red-500/20 text-red-500' : isEnrolled ? 'bg-blue-500/10 border-blue-500/20 text-blue-500' : 'bg-green-500/10 border-green-500/20 text-green-500'}`}>
-                      {isAfterDeadline ? 'CLOSED' : isEnrolled ? 'ENROLLED' : 'LIVE CHALLENGE'}
+                    <div className={`px-3 py-1 border rounded-full text-[10px] font-black uppercase tracking-widest ${isAfterDeadline ? 'bg-red-500/10 border-red-500/20 text-red-500' : isEnrolled ? (isSubmitted ? 'bg-purple-500/10 border-purple-500/20 text-purple-500' : 'bg-blue-500/10 border-blue-500/20 text-blue-500') : 'bg-green-500/10 border-green-500/20 text-green-500'}`}>
+                      {isAfterDeadline ? 'CLOSED' : isSubmitted ? 'MVP SUBMITTED' : isEnrolled ? 'ENROLLED' : 'LIVE CHALLENGE'}
                     </div>
                     <div className="text-2xl font-bold text-white">${challenge.prize_pool}</div>
                   </div>
@@ -201,6 +208,11 @@ const UserDashboard = () => {
                     >
                       VIEW LEADERBOARD 🏆
                     </button>
+                  ) : isSubmitted ? (
+                    <div className="text-center py-4 bg-white/5 rounded-2xl border border-white/10">
+                      <p className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-1">MVP SUBMITTED</p>
+                      <p className="text-[10px] text-gray-500 italic">Result will be announced after deadline</p>
+                    </div>
                   ) : isEnrolled ? (
                     <button
                       onClick={(e) => {
@@ -236,7 +248,10 @@ const UserDashboard = () => {
       {selectedChallenge && (
         <SubmissionModal
           challenge={selectedChallenge}
-          onClose={() => setSelectedChallenge(null)}
+          onClose={() => {
+            setSelectedChallenge(null);
+            fetchEnrolled(userId);
+          }}
           userId={userId}
         />
       )}

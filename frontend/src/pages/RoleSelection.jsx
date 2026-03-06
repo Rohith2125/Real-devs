@@ -25,7 +25,7 @@ const RoleSelection = () => {
       });
     }
   };
-
+  
   return (
     <div className="min-h-screen bg-black text-white flex flex-col justify-center items-center px-6">
       <div className="max-w-4xl w-full text-center mb-16">

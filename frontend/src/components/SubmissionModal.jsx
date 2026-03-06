@@ -24,7 +24,7 @@ const SubmissionModal = ({ challenge, onClose, userId }) => {
       });
 
       alert("CHALLENGE SUBMITTED SUCCESSFULLY 🚀");
-      onClose();
+      if (typeof onClose === 'function') onClose();
     } catch (err) {
       console.error(err);
       alert("Error submitting. Please check your URLs and try again.");

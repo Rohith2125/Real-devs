@@ -43,11 +43,11 @@ def enroll_user(enrollment: EnrollmentCreate):
 
 @router.get("/user/{user_id}")
 def get_user_enrollments(user_id: UUID):
-
+    uid = str(user_id)
     # 1️⃣ Get enrollments
     enrollments = supabase.table("enrollments") \
         .select("challenge_id") \
-        .eq("user_id", str(user_id)) \
+        .eq("user_id", uid) \
         .execute()
 
     if not enrollments.data:
@@ -56,11 +56,26 @@ def get_user_enrollments(user_id: UUID):
     challenge_ids = [e["challenge_id"] for e in enrollments.data]
 
     # 2️⃣ Fetch full challenge details
-    challenges = supabase.table("challenges") \
+    challenges_res = supabase.table("challenges") \
         .select("*") \
         .in_("id", challenge_ids) \
         .execute()
 
+    # 3️⃣ Fetch submissions for this user to mark which ones are completed
+    submissions_res = supabase.table("submissions") \
+        .select("challenge_id") \
+        .eq("user_id", uid) \
+        .in_("challenge_id", challenge_ids) \
+        .execute()
+    
+    submitted_ids = {s["challenge_id"] for s in submissions_res.data}
+
+    # Add has_submitted flag
+    challenges_data = []
+    for c in challenges_res.data:
+        c["has_submitted"] = c["id"] in submitted_ids
+        challenges_data.append(c)
+
     return {
-        "enrolled_challenges": challenges.data
+        "enrolled_challenges": challenges_data
     }
