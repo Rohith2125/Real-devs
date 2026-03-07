@@ -120,7 +120,7 @@ const MyChallenges = () => {
                 {challenge.has_submitted && !isAfterDeadline(challenge.deadline) ? (
                   <div className="text-center py-4 bg-white/5 rounded-2xl border border-white/10">
                     <p className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-1">MVP SUBMITTED</p>
-                    <p className="text-[10px] text-gray-500 italic">Result will be announced after deadline</p>
+                    <p className="text-[10px] text-gray-500 italic uppercase">Result will be announced after deadline</p>
                   </div>
                 ) : (
                   <button

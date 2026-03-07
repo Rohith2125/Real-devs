@@ -10,6 +10,7 @@ const ChallengeDetail = () => {
   const [challenge, setChallenge] = useState(null);
   const [userId, setUserId] = useState(null);
   const [isEnrolled, setIsEnrolled] = useState(false);
+  const [hasSubmitted, setHasSubmitted] = useState(false);
   const [loading, setLoading] = useState(true);
   const [showSubmitModal, setShowSubmitModal] = useState(false);
 
@@ -34,8 +35,9 @@ const ChallengeDetail = () => {
       const found = allChallenges.find((c) => c.id === id);
       setChallenge(found);
 
-      const enrolled = (enrolledData.enrolled_challenges || []).some(c => c.id === id);
-      setIsEnrolled(enrolled);
+      const enrolledChallenge = (enrolledData.enrolled_challenges || []).find(c => c.id === id);
+      setIsEnrolled(!!enrolledChallenge);
+      setHasSubmitted(enrolledChallenge?.has_submitted || false);
     } catch (err) {
       console.error("Initialization failed:", err);
     } finally {
@@ -84,8 +86,8 @@ const ChallengeDetail = () => {
       <div className="max-w-4xl mx-auto">
         <div className="mb-12">
           <div className="flex gap-4 mb-8">
-            <div className={`px-4 py-1.5 border rounded-full text-xs font-black uppercase tracking-widest ${isEnrolled ? 'bg-blue-500/10 border-blue-500/20 text-blue-500' : 'bg-green-500/10 border-green-500/20 text-green-500'}`}>
-              {isEnrolled ? 'ENROLLED' : 'ACTIVE MISSION'}
+            <div className={`px-4 py-1.5 border rounded-full text-xs font-black uppercase tracking-widest ${isAfterDeadline ? 'bg-red-500/10 border-red-500/20 text-red-500' : hasSubmitted ? 'bg-purple-500/10 border-purple-500/20 text-purple-500' : isEnrolled ? 'bg-blue-500/10 border-blue-500/20 text-blue-500' : 'bg-green-500/10 border-green-500/20 text-green-500'}`}>
+              {isAfterDeadline ? 'MISSION CLOSED' : hasSubmitted ? 'MVP SUBMITTED' : isEnrolled ? 'ENROLLED' : 'ACTIVE MISSION'}
             </div>
             <div className="px-4 py-1.5 border border-white/10 rounded-full text-xs font-black tracking-widest text-gray-400">
               POOL: ${challenge.prize_pool}
@@ -132,6 +134,10 @@ const ChallengeDetail = () => {
               >
                 VIEW MISSION RESULTS 🏆
               </button>
+            ) : hasSubmitted ? (
+              <div className="flex-1 bg-[#0A0A0A] border border-white/5 text-gray-400 py-6 rounded-3xl font-black text-xs text-center uppercase tracking-[0.3em]">
+                Result will be announced after deadline
+              </div>
             ) : isEnrolled ? (
               <button
                 onClick={() => setShowSubmitModal(true)}
@@ -154,7 +160,10 @@ const ChallengeDetail = () => {
       {showSubmitModal && (
         <SubmissionModal
           challenge={challenge}
-          onClose={() => setShowSubmitModal(false)}
+          onClose={() => {
+            setShowSubmitModal(false);
+            init(); // Refresh tracking state
+          }}
           userId={userId}
         />
       )}
