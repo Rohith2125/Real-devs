@@ -9,6 +9,7 @@ const ChallengeLeaderboard = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [expandedId, setExpandedId] = useState(null);
+    const [copiedId, setCopiedId] = useState(null);
 
     const getBadgeStyle = (rank) => {
         if (rank === 1) return "text-yellow-500 border-yellow-500/20 bg-yellow-500/10";
@@ -111,11 +112,12 @@ const ChallengeLeaderboard = () => {
                                                     onClick={(e) => {
                                                         e.stopPropagation();
                                                         navigator.clipboard.writeText(entry.email);
-                                                        alert('Email copied to clipboard!');
+                                                        setCopiedId(entry.submission_id);
+                                                        setTimeout(() => setCopiedId(null), 2000);
                                                     }}
                                                     className="text-[9px] font-black text-blue-500 hover:text-blue-400 uppercase tracking-widest mt-2"
                                                 >
-                                                    COPY
+                                                    {copiedId === entry.submission_id ? 'COPIED!' : 'COPY'}
                                                 </button>
                                             </td>
                                             <td className="px-10 py-8">

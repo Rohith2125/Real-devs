@@ -7,9 +7,12 @@ const SubmissionModal = ({ challenge, onClose, userId }) => {
   const [videoUrl, setVideoUrl] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const [status, setStatus] = useState({ type: "", message: "" });
+
   const handleSubmit = async () => {
+    setStatus({ type: "", message: "" });
     if (!repoUrl.trim()) {
-      alert("Please provide the GitHub repository URL");
+      setStatus({ type: "error", message: "Please provide the GitHub repository URL" });
       return;
     }
 
@@ -23,11 +26,15 @@ const SubmissionModal = ({ challenge, onClose, userId }) => {
         demo_video_url: videoUrl.trim() || null,
       });
 
-      alert("CHALLENGE SUBMITTED SUCCESSFULLY 🚀");
-      if (typeof onClose === 'function') onClose();
+      setStatus({ type: "success", message: "CHALLENGE SUBMITTED SUCCESSFULLY " });
+
+      // Close modal after a short delay to show success message
+      setTimeout(() => {
+        if (typeof onClose === 'function') onClose();
+      }, 2000);
     } catch (err) {
       console.error(err);
-      alert("Error submitting. Please check your URLs and try again.");
+      setStatus({ type: "error", message: "Error submitting. Please check your URLs and try again." });
     } finally {
       setIsSubmitting(false);
     }
@@ -89,6 +96,12 @@ const SubmissionModal = ({ challenge, onClose, userId }) => {
           </div>
         </div>
 
+        {status.message && (
+          <div className={`p-4 rounded-xl text-center font-bold text-[10px] tracking-[0.2em] uppercase mb-4 ${status.type === 'success' ? 'bg-green-500/10 text-green-500 border border-green-500/20' : 'bg-red-500/10 text-red-500 border border-red-500/20'}`}>
+            {status.message}
+          </div>
+        )}
+
         <div className="mt-12 flex flex-col gap-4">
           <button
             disabled={isSubmitting}
@@ -101,7 +114,7 @@ const SubmissionModal = ({ challenge, onClose, userId }) => {
                 <span>PROCESSING ARENA ENTRY...</span>
               </>
             ) : (
-              "UPLOAD BUILD 🚀"
+              "UPLOAD BUILD "
             )}
           </button>
           <button

@@ -83,9 +83,12 @@ const SponsorDashboard = () => {
     navigate("/");
   };
 
+  const [status, setStatus] = useState({ type: "", message: "" });
+
   const handleCreate = async () => {
+    setStatus({ type: "", message: "" });
     if (!title || !problemStatement || !prizePool || !deadline) {
-      alert("Please fill all fields");
+      setStatus({ type: "error", message: "Please fill all fields" });
       return;
     }
 
@@ -98,14 +101,17 @@ const SponsorDashboard = () => {
         deadline: deadline,
       });
 
-      alert("Challenge created successfully!");
+      setStatus({ type: "success", message: "Challenge created successfully!" });
       setTitle("");
       setProblemStatement("");
       setPrizePool("");
       setDeadline(getLocalDefaultDeadline());
+
+      // Clear status after 3 seconds
+      setTimeout(() => setStatus({ type: "", message: "" }), 3000);
     } catch (error) {
       console.error(error);
-      alert("Error creating challenge. Ensure your profile is fully set up.");
+      setStatus({ type: "error", message: "Error creating challenge. Ensure your profile is fully set up." });
     } finally {
       setIsLaunching(false);
     }
@@ -196,6 +202,12 @@ const SponsorDashboard = () => {
                 </p>
               </div>
             </div>
+
+            {status.message && (
+              <div className={`p-4 rounded-xl text-center font-bold text-sm tracking-widest uppercase mb-4 ${status.type === 'success' ? 'bg-green-500/10 text-green-500 border border-green-500/20' : 'bg-red-500/10 text-red-500 border border-red-500/20'}`}>
+                {status.message}
+              </div>
+            )}
 
             <button
               onClick={handleCreate}

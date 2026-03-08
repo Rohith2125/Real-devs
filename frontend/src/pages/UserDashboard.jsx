@@ -108,10 +108,9 @@ const UserDashboard = () => {
     try {
       await enrollInChallenge(userId, challengeId);
       setEnrolledIds(prev => new Set([...prev, challengeId]));
-      alert("Enrolled successfully!");
+      // Success feedback is implicitly handled by the UI changing from "ENROLL NOW" to "SUBMIT MVP"
     } catch (err) {
-      console.error(err);
-      alert("Error enrolling in challenge");
+      console.error("Enrollment failed:", err);
     }
   };
 
@@ -206,7 +205,7 @@ const UserDashboard = () => {
                       }}
                       className="w-full bg-white text-black py-4 rounded-2xl font-black text-lg hover:bg-gray-200 transition-all shadow-xl shadow-white/5"
                     >
-                      VIEW LEADERBOARD 🏆
+                      VIEW LEADERBOARD 
                     </button>
                   ) : isSubmitted ? (
                     <div className="text-center py-4 bg-white/5 rounded-2xl border border-white/10">

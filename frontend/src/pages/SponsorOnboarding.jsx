@@ -61,9 +61,12 @@ const SponsorOnboarding = () => {
     }
   };
 
+  const [status, setStatus] = useState({ type: "", message: "" });
+
   const handleFinishOnboarding = async () => {
+    setStatus({ type: "", message: "" });
     if (!companyName.trim()) {
-      alert("Please enter your company name");
+      setStatus({ type: "error", message: "Please enter your company name" });
       return;
     }
 
@@ -76,7 +79,7 @@ const SponsorOnboarding = () => {
       navigate("/sponsor-dashboard");
     } catch (err) {
       console.error(err);
-      alert("Error finishing onboarding");
+      setStatus({ type: "error", message: "Error finishing onboarding" });
     } finally {
       setIsSyncing(false);
     }
@@ -110,6 +113,12 @@ const SponsorOnboarding = () => {
             onChange={(e) => setCompanyName(e.target.value)}
           />
         </div>
+
+        {status.message && (
+          <div className="p-4 rounded-xl text-center font-bold text-[10px] tracking-[0.2em] uppercase mb-6 bg-red-500/10 text-red-500 border border-red-500/20">
+            {status.message}
+          </div>
+        )}
 
         <button
           onClick={handleFinishOnboarding}

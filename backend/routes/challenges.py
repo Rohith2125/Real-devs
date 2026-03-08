@@ -77,6 +77,7 @@ def get_all_challenges():
     # Use a join to fetch the sponsor's company_name from the 'users' table
     response = supabase.table("challenges") \
         .select("*, sponsor:users!id(company_name)") \
+        .order("created_at", desc=True) \
         .execute()
     
     # Flatten the result for easier frontend consumption
@@ -106,6 +107,7 @@ def get_sponsor_challenges(authorization: str = Header(None)):
     response = supabase.table("challenges") \
         .select("*, sponsor:users!id(company_name)") \
         .eq("sponsor_id", str(sponsor_id)) \
+        .order("created_at", desc=True) \
         .execute()
     
     return response.data

@@ -50,10 +50,8 @@ const ChallengeDetail = () => {
     try {
       await enrollInChallenge(userId, id);
       setIsEnrolled(true);
-      alert("Enrolled successfully! Ready to build? 🚀");
     } catch (err) {
       console.error(err);
-      alert("Error enrolling. Please try again.");
     }
   };
 
@@ -132,7 +130,7 @@ const ChallengeDetail = () => {
                 onClick={() => navigate(`/challenge/${id}/leaderboard`)}
                 className="flex-1 bg-white text-black py-6 rounded-3xl font-black text-xl hover:bg-gray-200 transition-all shadow-2xl shadow-white/5 active:scale-[0.98]"
               >
-                VIEW MISSION RESULTS 🏆
+                VIEW MISSION RESULTS 
               </button>
             ) : hasSubmitted ? (
               <div className="flex-1 bg-[#0A0A0A] border border-white/5 text-gray-400 py-6 rounded-3xl font-black text-xs text-center uppercase tracking-[0.3em]">
@@ -143,7 +141,7 @@ const ChallengeDetail = () => {
                 onClick={() => setShowSubmitModal(true)}
                 className="flex-1 bg-white text-black py-6 rounded-3xl font-black text-xl hover:bg-gray-200 transition-all shadow-2xl shadow-white/5 active:scale-[0.98]"
               >
-                SUBMIT ARENA MVP 🚀
+                SUBMIT ARENA MVP 
               </button>
             ) : (
               <button
